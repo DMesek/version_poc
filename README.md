@@ -52,6 +52,37 @@ enum Version {
 }
 ```
 
+### Version Manager
+
+A state manager for the current version. It gets instantiated on the splash screen so that the stored version is ready for reading when user opens the app. The versionStorage is a persistent storage for the version preference meaning it won't get lost when user kills the app.
+
+```dart
+final versionNotifierProvider = StateNotifierProvider<VersionNotifier, Version>(
+  (ref) => VersionNotifier(
+    ref.watch(
+      versionStorageProvider,
+    ),
+  )..getPreferredVersion(),
+);
+
+class VersionNotifier extends StateNotifier<Version> {
+  final VersionStorage _versionStorage;
+  VersionNotifier(this._versionStorage) : super(Version.values.last);
+
+  void getPreferredVersion() async {
+    final version = await _versionStorage.preferredVersion;
+    state = version;
+  }
+
+  void setPreferredVersion(Version version) async {
+    if (state == version) return;
+
+    await _versionStorage.storePreferredVersion(version);
+    state = version;
+  }
+}
+```
+
 ### Version specific widget
 
 Wrapper for every widget that could change after switching to another version. This was used in order to reuse the location feature from version 2.0.0 and add the address part in version 2.1.0
